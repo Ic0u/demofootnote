@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Truyện Kiều | Nguyễn Du - Bản Hiện Đại</title>
+<meta name="description" content="Truyện Kiều của đại thi hào Nguyễn Du - Bản hiện đại hóa với chú thích đầy đủ. 3254 câu thơ lục bát."/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+:root {
+    --paper-light: #fdf6e3;
+    --paper-dark: #f5eed5;
+    --sepia-dark: #433422;
+    --sepia-medium: #5c4b37;
+    --sepia-light: #8c7b65;
+    --accent-red: #8e3a3a;
+}
+body {
+background-color: var(--paper-light);
+color: var(--sepia-dark);
+font-family: 'EB Garamond', serif;
+}
+.material-symbols-outlined {
+font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' -25, 'opsz' 24;
+color: var(--sepia-medium);
+}
+.title-font {
+    font-family: 'Pinyon Script', cursive;
+}
+.text-accent-red {
+    color: var(--accent-red);
+}
+.btn-primary {
+    background-color: var(--accent-red);
+    color: white;
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    font-family: 'EB Garamond', serif;
+    text-transform: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px -1px rgba(142, 58, 58, 0.2);
+}
+.btn-primary:hover {
+    background-color: #7a3131;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px -1px rgba(142, 58, 58, 0.3);
+}
+.btn-outline {
+    border: 1px solid var(--sepia-medium);
+    color: var(--sepia-dark);
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    font-family: 'EB Garamond', serif;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+.btn-outline:hover {
+    background-color: var(--sepia-medium);
+    color: var(--paper-light);
+}
+.chapter-card {
+border: 1px solid rgba(92, 75, 55, 0.1);
+transition: all 0.3s ease;
+}
+.chapter-card:hover {
+border-color: var(--sepia-medium);
+background-color: rgba(92, 75, 55, 0.02);
+transform: translateY(-2px);
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+    animation: fadeInUp 0.8s ease-out forwards;
+}
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+
+.paper-texture {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.4;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    mix-blend-mode: multiply;
+}
+
+.photo-frame {
+    position: relative;
+    border: 4px double var(--sepia-medium);
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+        0 2px 4px -1px rgba(0, 0, 0, 0.06),
+        inset 0 0 20px rgba(67, 52, 34, 0.2);
+}
+.photo-frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+    pointer-events: none;
+}
+</style>
+</head>
+<body class="selection:bg-[#eee1b9]">
+
+
+<canvas id="bg-canvas" class="fixed top-0 left-0 w-full h-full -z-10 bg-[#fdf6e3]"></canvas>
+
+<script>
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let particles = [];
+
+    // Mouse state for parallax
+    let mouseX = 0;
+    let mouseY = 0;
+    let targetX = 0;
+    let targetY = 0;
+
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        initParticles();
+    }
+
+    class Particle {
+        constructor() {
+            this.reset(true);
+        }
+
+        reset(initial = false) {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.size = Math.random() * 2 + 0.5;
+            this.speedX = (Math.random() - 0.5) * 0.2;
+            this.speedY = (Math.random() - 0.5) * 0.2;
+            this.opacity = Math.random() * 0.3 + 0.1;
+            this.life = Math.random() * 1000;
+            this.maxLife = 1000 + Math.random() * 1000;
+        }
+
+        update() {
+            this.x += this.speedX + (mouseX * 1.5); // Parallax influence
+            this.y += this.speedY + (mouseY * 1.5);
+            this.life++;
+
+            if (this.x < 0) this.x = width;
+            if (this.x > width) this.x = 0;
+            if (this.y < 0) this.y = height;
+            if (this.y > height) this.y = 0;
+
+            // Gentle opacity pulse
+            this.currentOpacity = this.opacity * (0.5 + 0.5 * Math.sin(this.life * 0.02));
+        }
+
+        draw() {
+            ctx.fillStyle = `rgba(92, 75, 55, ${this.currentOpacity})`;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function initParticles() {
+        particles = [];
+        const particleCount = Math.floor((width * height) / 10000); // Responsive count
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+        
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+        requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', resize);
+    window.addEventListener('mousemove', (e) => {
+        // Normalize mouse -0.5 to 0.5
+        mouseX = (e.clientX / width) - 0.5;
+        mouseY = (e.clientY / height) - 0.5;
+    });
+
+    resize();
+    animate();
+</script>
+
+<header class="relative overflow-hidden backdrop-blur-sm min-h-screen flex flex-col">
+    <!-- Top Nav -->
+    <div class="absolute top-0 left-0 w-full p-8 flex justify-between items-center z-10">
+        <div class="title-font text-3xl md:text-4xl text-[var(--sepia-dark)] tracking-wide">Truyện Kiều</div>
+        <nav class="hidden md:flex gap-8 text-[var(--sepia-medium)] font-medium">
+            <a href="#" class="hover:text-[var(--accent-red)] transition-colors text-[var(--accent-red)] font-bold">Trang chủ</a>
+            <a href="#chapters" class="hover:text-[var(--accent-red)] transition-colors">Tác phẩm</a>
+            <a href="nguyen_du.html" class="hover:text-[var(--accent-red)] transition-colors">Tác giả</a>
+            <a href="#" class="hover:text-[var(--accent-red)] transition-colors">Giá trị</a>
+            <a href="#" class="hover:text-[var(--accent-red)] transition-colors">Liên hệ</a>
+        </nav>
+    </div>
+
+    <!-- Hero Content -->
+    <div class="flex-grow flex items-center justify-center relative z-0 mt-16 md:mt-0">
+        <div class="container mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+            <!-- Left Text -->
+            <div class="text-left space-y-8 animate-fade-in-up md:pl-12">
+                <div class="relative">
+                     <h1 class="title-font text-6xl md:text-8xl lg:text-9xl text-[var(--accent-red)] leading-tight mb-2 drop-shadow-sm">
+                        Truyện Kiều
+                    </h1>
+                    <h2 class="title-font text-5xl md:text-7xl lg:text-8xl text-[var(--accent-red)] leading-tight ml-24 drop-shadow-sm">
+                        Nguyễn Du
+                    </h2>
+                </div>
+               
+                <p class="text-lg md:text-xl text-[var(--sepia-dark)] max-w-lg leading-relaxed font-medium">
+                    Một kiệt tác vượt thời gian, nơi số phận, tình yêu và nhân nghĩa đan xen trong từng vần lục bát - nơi cái đẹp, cái khổ cùng tồn tại trong tiếng thơ.
+                </p>
+
+                <div class="flex flex-wrap gap-4 pt-4">
+                    <a href="#chapters" class="btn-primary flex items-center gap-2">
+                        Về tác phẩm <span class="material-symbols-outlined text-sm">menu_book</span>
+                    </a>
+                    <a href="nguyen_du.html" class="btn-outline flex items-center gap-2 hover:border-[var(--accent-red)] hover:text-[var(--accent-red)]">
+                        Tìm hiểu tác giả <span class="material-symbols-outlined text-sm">person</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Right Image/Quote -->
+            <div class="relative animate-fade-in-up delay-200">
+                <!-- Main Character Image -->
+                <div class="relative z-10 mx-auto w-full max-w-md">
+                   <div class="photo-frame rounded-t-[10rem] border-none shadow-2xl overflow-hidden aspect-[3/4]">
+                        <img src="assets/images/truyen_kieu_sketch.jpg" alt="Thúy Kiều" class="w-full h-full object-cover sepia-[.15] hover:scale-105 transition-transform duration-[3s]">
+                   </div>
+                </div>
+                
+                <!-- Quote -->
+                <div class="absolute -right-4 top-1/2 transform -translate-y-1/2 w-80 backdrop-blur-md bg-[var(--paper-light)]/80 p-6 rounded-lg shadow-lg border-l-4 border-[var(--accent-red)] z-20 hidden lg:block">
+                     <span class="text-6xl text-[var(--sepia-dark)] font-serif absolute -top-4 -left-2 opacity-50">“</span>
+                     <p class="text-[var(--sepia-dark)] text-lg mb-4 italic leading-relaxed">
+                        <span class="text-3xl float-left mr-2 font-bold text-[var(--accent-red)]">K</span>iều càng sắc sảo, mặn mà,<br>
+                        So bề tài, sắc, lại là phần hơn.<br>
+                        Làn thu thủy, nét xuân sơn,<br>
+                        Hoa ghen thua thắm, liễu hờn kém xanh.
+                     </p>
+                     <span class="text-6xl text-[var(--sepia-dark)] font-serif absolute -bottom-12 -right-2 opacity-50">”</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-5xl mx-auto px-8 py-16">
+<div class="grid md:grid-cols-2 gap-6 mb-16">
+<a href="chapters/chapter-01.html" class="chapter-card p-8 flex items-start gap-6 group">
+<span class="text-4xl font-bold text-[var(--sepia-light)] group-hover:text-[var(--sepia-dark)] transition-colors">01</span>
+<div>
+<h3 class="title-font text-xl font-bold italic mb-2">Kiều Thăm Mộ Đạm Tiên</h3>
+<p class="text-sm text-[var(--sepia-medium)]">Câu 1–244</p>
+<p class="text-xs text-[var(--sepia-light)] mt-2 italic">Giới thiệu gia đình họ Vương, tiết Thanh Minh, gặp mộ Đạm Tiên...</p>
+</div>
+</a>
+
+<a href="chapters/chapter-02.html" class="chapter-card p-8 flex items-start gap-6 group">
+<span class="text-4xl font-bold text-[var(--sepia-light)] group-hover:text-[var(--sepia-dark)] transition-colors">02</span>
+<div>
+<h3 class="title-font text-xl font-bold italic mb-2">Kiều Gặp Kim Trọng</h3>
+<p class="text-sm text-[var(--sepia-medium)]">Câu 245–572</p>
+<p class="text-xs text-[var(--sepia-light)] mt-2 italic">Kim Trọng tương tư, tìm cách gặp Kiều, đính ước thề nguyền...</p>
+</div>
+</a>
+
+<a href="chapters/chapter-03.html" class="chapter-card p-8 flex items-start gap-6 group">
+<span class="text-4xl font-bold text-[var(--sepia-light)] group-hover:text-[var(--sepia-dark)] transition-colors">03</span>
+<div>
+<h3 class="title-font text-xl font-bold italic mb-2">Kiều Bán Mình Chuộc Cha</h3>
+<p class="text-sm text-[var(--sepia-medium)]">Câu 573–804</p>
+<p class="text-xs text-[var(--sepia-light)] mt-2 italic">Gia đình gặp tai họa, Kiều bán mình, trao duyên cho Thúy Vân...</p>
+</div>
+</a>
+
+<a href="chapters/chapter-04.html" class="chapter-card p-8 flex items-start gap-6 group">
+<span class="text-4xl font-bold text-[var(--sepia-light)] group-hover:text-[var(--sepia-dark)] transition-colors">04</span>
+<div>
+<h3 class="title-font text-xl font-bold italic mb-2">Kiều Rơi Vào Tay Tú Bà</h3>
+<p class="text-sm text-[var(--sepia-medium)]">Câu 805–1056</p>
+<p class="text-xs text-[var(--sepia-light)] mt-2 italic">Mã Giám Sinh mua Kiều, đưa về lầu xanh của Tú bà...</p>
+</div>
+</a>
+
+<a href="chapters/chapter-05.html" class="chapter-card p-8 flex items-start gap-6 group">
+<span class="text-4xl font-bold text-[var(--sepia-light)] group-hover:text-[var(--sepia-dark)] transition-colors">05</span>
+<div>
+<h3 class="title-font text-xl font-bold italic mb-2">Kiều Mắc Lừa Sở Khanh</h3>
+<p class="text-sm text-[var(--sepia-medium)]">Câu 1057–1274</p>
+<p class="text-xs text-[var(--sepia-light)] mt-2 italic">Sở Khanh dụ dỗ rồi phản bội, Kiều bị bắt lại...</p>
+</div>
+</a>
+
+<a href="chapters/chapter-06.html" class="chapter-card p-8 flex items-start gap-6 group">
+<span class="text-4xl font-bold text-[var(--sepia-light)] group-hover:text-[var(--sepia-dark)] transition-colors">06</span>
+<div>
+<h3 class="title-font text-xl font-bold italic mb-2">Kiều Gặp Thúc Sinh</h3>
+<p class="text-sm text-[var(--sepia-medium)]">Câu 1275–1472</p>
+<p class="text-xs text-[var(--sepia-light)] mt-2 italic">Thúc Sinh chuộc Kiều, đưa về làm thiếp...</p>
+</div>
+</a>
+
+<a href="chapters/chapter-07.html" class="chapter-card p-8 flex items-start gap-6 group">
+<span class="text-4xl font-bold text-[var(--sepia-light)] group-hover:text-[var(--sepia-dark)] transition-colors">07</span>
+<div>
+<h3 class="title-font text-xl font-bold italic mb-2">Kiều Và Hoạn Thư</h3>
+<p class="text-sm text-[var(--sepia-medium)]">Câu 1473–1704</p>
+<p class="text-xs text-[var(--sepia-light)] mt-2 italic">Hoạn Thư ghen tuông, hành hạ Kiều...</p>
+</div>
+</a>
+
+<a href="chapters/chapter-08.html" class="chapter-card p-8 flex items-start gap-6 group">
+<span class="text-4xl font-bold text-[var(--sepia-light)] group-hover:text-[var(--sepia-dark)] transition-colors">08</span>
+<div>
+<h3 class="title-font text-xl font-bold italic mb-2">Kiều Trốn Khỏi Nhà Hoạn Thư</h3>
+<p class="text-sm text-[var(--sepia-medium)]">Câu 1705–2028</p>
+<p class="text-xs text-[var(--sepia-light)] mt-2 italic">Kiều trốn khỏi nhà Hoạn Thư, nương náu cửa chùa...</p>
+</div>
+</a>
+
+<a href="chapters/chapter-09.html" class="chapter-card p-8 flex items-start gap-6 group">
+<span class="text-4xl font-bold text-[var(--sepia-light)] group-hover:text-[var(--sepia-dark)] transition-colors">09</span>
+<div>
+<h3 class="title-font text-xl font-bold italic mb-2">Kiều Gặp Từ Hải</h3>
+<p class="text-sm text-[var(--sepia-medium)]">Câu 2029–2288</p>
+<p class="text-xs text-[var(--sepia-light)] mt-2 italic">Anh hùng Từ Hải gặp và cứu Kiều, hai người nên duyên...</p>
+</div>
+</a>
+
+<a href="chapters/chapter-10.html" class="chapter-card p-8 flex items-start gap-6 group">
+<span class="text-4xl font-bold text-[var(--sepia-light)] group-hover:text-[var(--sepia-dark)] transition-colors">10</span>
+<div>
+<h3 class="title-font text-xl font-bold italic mb-2">Kiều Báo Thù</h3>
+<p class="text-sm text-[var(--sepia-medium)]">Câu 2289–2418</p>
+<p class="text-xs text-[var(--sepia-light)] mt-2 italic">Kiều xử tội những kẻ đã hại nàng...</p>
+</div>
+</a>
+
+<a href="chapters/chapter-11.html" class="chapter-card p-8 flex items-start gap-6 group">
+<span class="text-4xl font-bold text-[var(--sepia-light)] group-hover:text-[var(--sepia-dark)] transition-colors">11</span>
+<div>
+<h3 class="title-font text-xl font-bold italic mb-2">Từ Hải Mắc Lừa, Kiều Tự Vẫn</h3>
+<p class="text-sm text-[var(--sepia-medium)]">Câu 2419–2738</p>
+<p class="text-xs text-[var(--sepia-light)] mt-2 italic">Từ Hải bị hại, Kiều nhảy sông Tiền Đường...</p>
+</div>
+</a>
+
+<a href="chapters/chapter-12.html" class="chapter-card p-8 flex items-start gap-6 group">
+<span class="text-4xl font-bold text-[var(--sepia-light)] group-hover:text-[var(--sepia-dark)] transition-colors">12</span>
+<div>
+<h3 class="title-font text-xl font-bold italic mb-2">Kim Trọng Đi Tìm Kiều</h3>
+<p class="text-sm text-[var(--sepia-medium)]">Câu 2739–2972</p>
+<p class="text-xs text-[var(--sepia-light)] mt-2 italic">Kim Trọng giữ lời thề, đi tìm Kiều suốt mười lăm năm...</p>
+</div>
+</a>
+
+<a href="chapters/chapter-13.html" class="chapter-card p-8 flex items-start gap-6 group bg-[var(--paper-dark)]">
+<span class="text-4xl font-bold text-[var(--sepia-dark)]">13</span>
+<div>
+<h3 class="title-font text-xl font-bold italic mb-2">Kiều – Kim Trọng Đoàn Tụ</h3>
+<p class="text-sm text-[var(--sepia-medium)]">Câu 2973–3254</p>
+<p class="text-xs text-[var(--sepia-light)] mt-2 italic">Kiều được cứu, đoàn tụ gia đình và Kim Trọng. — HẾT —</p>
+</div>
+</a>
+</div>
+
+<div class="border-t border-[var(--sepia-light)]/20 pt-16 text-center">
+<h3 class="title-font text-2xl font-bold italic mb-6">Về tác phẩm</h3>
+<p class="text-[var(--sepia-medium)] max-w-2xl mx-auto leading-relaxed italic">
+Truyện Kiều (Đoạn Trường Tân Thanh) là tác phẩm văn học kinh điển của Việt Nam, 
+do Đại thi hào Nguyễn Du sáng tác vào đầu thế kỷ 19. Truyện gồm 3254 câu thơ lục bát, 
+kể về cuộc đời đầy truân chuyên của nàng Thúy Kiều.
+</p>
+<a href="nguyen_du.html" class="inline-flex items-center gap-2 mt-8 text-sm font-bold uppercase tracking-widest border-b border-[var(--sepia-dark)] pb-1 hover:opacity-70 transition-opacity">
+Tìm hiểu về Nguyễn Du
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+</main>
+
+<footer class="border-t border-[var(--sepia-light)]/20 py-12 text-center text-[var(--sepia-light)] text-sm">
+<p class="italic mb-2">Bản hiện đại hóa — 2026</p>
+<p>by <span class="font-semibold text-[var(--sepia-medium)]">Marcus Nguyen</span></p>
+</footer>
+
+</body>
+</html>
